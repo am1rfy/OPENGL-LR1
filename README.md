@@ -31,8 +31,6 @@
     DrawPolygon(myShape);
 ```    
 
-> Result
-
 ### Summary
 - Display processing: 
 ```c++
