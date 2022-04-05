@@ -42,15 +42,15 @@ GLuint VBO;
 ``` 
 - Buffer handling: 
 ```c++
-  - glGenBuffers(1, &VBO);
-  - glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  - glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
+glGenBuffers(1, &VBO);
+glBindBuffer(GL_ARRAY_BUFFER, VBO);
+glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
 ```  
 - Window initialization: 
 ```c++
-  - glutInit(&argc, argv); 
-  - glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-  - glutInitWindowSize(800, 600);
-  - glutInitWindowPosition(300, 100);
-  - glutCreateWindow(".NET WINDOWS FORMS"); =)
+glutInit(&argc, argv); 
+glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+glutInitWindowSize(800, 600);
+glutInitWindowPosition(300, 100);
+glutCreateWindow(".NET WINDOWS FORMS"); =)
 ```
