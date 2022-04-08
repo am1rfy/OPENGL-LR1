@@ -28,20 +28,8 @@ out vec4 FragColor;                                                             
                                                                                     \n\
 void main()                                                                         \n\
 {                                                                                   \n\
-    FragColor = vec4(0.5, 1.0, 1.0, 1.0);                                           \n\
+    FragColor = vec4(1.0, 1.0, 0.0, 1.0);                                           \n\
 }";
-
-std::string SetColor(std::string color) {
-    return "                                                          \n\
-#version 330                                                                        \n\
-                                                                                    \n\
-out vec4 FragColor;                                                                 \n\
-                                                                                    \n\
-void main()                                                                         \n\
-{                                                                                   \n\
-    FragColor = vec4(" + color + ");                                                \n\
-}";
-}
 
 // vec4(1.0, 1.0, 1.0, 1.0)
 
@@ -53,14 +41,32 @@ static void RenderSceneCB()
 
     Scale += 0.001f;
 
-    glm::mat4x4 World;
+    glm::mat4x4 unit;
+    unit[0][0] = 1.0f; unit[0][1] = 0.0f; unit[0][2] = 0.0f; unit[0][3] = 0.0f;
+    unit[1][0] = 0.0f; unit[1][1] = 1.0f; unit[1][2] = 0.0f; unit[1][3] = 0.0f;
+    unit[2][0] = 0.0f; unit[2][1] = 0.0f; unit[2][2] = 1.0f; unit[2][3] = 0.0f;
+    unit[3][0] = 0.0f; unit[3][1] = 0.0f; unit[3][2] = 0.0f; unit[3][3] = 1.0f;
 
-    World[0][0] = 1.0f; World[0][1] = 0.0f; World[0][2] = 0.0f; World[0][3] = -sinf(Scale)/3*2;;
-    World[1][0] = 0.0f; World[1][1] = 1.0f; World[1][2] = 0.0f; World[1][3] = -cosf(Scale)/3*2;
-    World[2][0] = 0.0f; World[2][1] = 0.0f; World[2][2] = 1.0f; World[2][3] = 0.0f;
-    World[3][0] = 0.0f; World[3][1] = 0.0f; World[3][2] = 0.0f; World[3][3] = 1.0f;
+    glm::mat4x4 rotate;
+    rotate[0][0] = sinf(Scale); rotate[0][1] = -sinf(Scale); rotate[0][2] = 0.0f; rotate[0][3] = 0.0f;
+    rotate[1][0] = 0.0f; rotate[1][1] = 1.0f; rotate[1][2] = 0.0f; rotate[1][3] = 0.0f;
+    rotate[2][0] = cosf(Scale); rotate[2][1] = cosf(Scale); rotate[2][2] = 1.0f; rotate[2][3] = 0.0f;
+    rotate[3][0] = 0.0f; rotate[3][1] = 0.0f; rotate[3][2] = 0.0f; rotate[3][3] = 1.0f;
 
-    glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, &World[0][0]);
+    glm::mat4x4 move;
+    move[0][0] = 1.0f; move[0][1] = 0.0f; move[0][2] = 0.0f; move[0][3] = sinf(Scale);
+    move[1][0] = 0.0f; move[1][1] = 1.0f; move[1][2] = 0.0f; move[1][3] = cosf(Scale);
+    move[2][0] = 0.0f; move[2][1] = 0.0f; move[2][2] = 1.0f; move[2][3] = 0.0f;
+    move[3][0] = 0.0f; move[3][1] = 0.0f; move[3][2] = 0.0f; move[3][3] = 1.0f;
+
+    glm::mat4x4 resize;
+    resize[0][0] = sinf(Scale); resize[0][1] = 0.0f; resize[0][2] = 0.0f; resize[0][3] = 0.0f;
+    resize[1][0] = 0.0f; resize[1][1] = sinf(Scale); resize[1][2] = 0.0f; resize[1][3] = 0.0f;
+    resize[2][0] = 0.0f; resize[2][1] = 0.0f; resize[2][2] = sinf(Scale); resize[2][3] = 0.0f;
+    resize[3][0] = 0.0f; resize[3][1] = 0.0f; resize[3][2] = 0.0f; resize[3][3] = 1.0f;
+
+    glm::mat4x4 result = unit * rotate * move * resize;
+    glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, &result[0][0]);
 
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -82,7 +88,7 @@ static void InitializeGlutCallbacks()
 
 static void DrawPolygon(std::list<glm::vec3>*Polygon)
 {
-    glm::vec3 localShape[3];
+    glm::vec3 localShape[4];
 
     auto item = Polygon->begin();
 
@@ -185,9 +191,10 @@ int main(int argc, char** argv)
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     std::list <glm::vec3> * firstShape = new std::list<glm::vec3>;
-    firstShape->push_back(glm::vec3(-0.3f, -0.3f, 0.0f));
-    firstShape->push_back(glm::vec3(0.3f, -0.3f, 0.0f));
-    firstShape->push_back(glm::vec3(0.0f, 0.3f, 0.0f));
+    firstShape->push_back(glm::vec3(0.5f, -0.5f, 0.0f));
+    firstShape->push_back(glm::vec3(-0.5f, -0.5f, 0.0f));
+    firstShape->push_back(glm::vec3(-0.5f, 0.5f, 0.0f));
+    firstShape->push_back(glm::vec3(0.5f, 0.5f, 0.0f));
 
     DrawPolygon(firstShape);
 
