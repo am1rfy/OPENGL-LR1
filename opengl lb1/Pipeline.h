@@ -14,6 +14,14 @@ private:
     glm::vec3 rotateInfo;
     glm::mat4 transformation;
 
+    struct {
+        float FOV;
+        float width;
+        float height;
+        float zNear;
+        float zFar;
+    } persProj;
+
 public:
     Pipeline()
     {
@@ -43,12 +51,21 @@ public:
         rotateInfo.z = RotateZ;
     }
 
+    void Perspectivee(float FOV, float width, float height, float zNear, float zFar) {
+        persProj.FOV = FOV;
+        persProj.width = width;
+        persProj.height = height;
+        persProj.zNear = zNear;
+        persProj.zFar = zFar;
+    }
+
     const glm::mat4* getTransformation()
     {
-        glm::mat4 ScaleTrans, RotateTrans, TranslationTrans;
+        glm::mat4 ScaleTrans, RotateTrans, TranslationTrans, PersProjTrans;
         InitScaleTransform(ScaleTrans);
         InitRotateTransform(RotateTrans);
         InitTranslationTransform(TranslationTrans);
+        InitPerspectiveTransform(PersProjTrans);
         transformation = TranslationTrans * RotateTrans * ScaleTrans;
         return &transformation;
     }
@@ -93,5 +110,19 @@ public:
         m[1][0] = 0.0f; m[1][1] = 1.0f; m[1][2] = 0.0f; m[1][3] = worldPos.y;
         m[2][0] = 0.0f; m[2][1] = 0.0f; m[2][2] = 1.0f; m[2][3] = worldPos.z;
         m[3][0] = 0.0f; m[3][1] = 0.0f; m[3][2] = 0.0f; m[3][3] = 1.0f;
+    }
+
+    void InitPerspectiveTransform(glm::mat4& m) const
+    {
+        const float ar = persProj.width / persProj.height;
+        const float zNear = persProj.zNear;
+        const float zFar = persProj.zFar;
+        const float zRange = zNear - zFar;
+        const float tanHalfFOV = tanf(ToRadian(persProj.FOV / 2.0f));
+
+        m[0][0] = 1.0f / (tanHalfFOV * ar); m[0][1] = 0.0f; m[0][2] = 0.0f; m[0][3] = 0.0f;
+        m[1][0] = 0.0f; m[1][1] = 1.0f / tanHalfFOV; m[1][2] = 0.0f; m[1][3] = 0.0f;
+        m[2][0] = 0.0f; m[2][1] = 0.0f; m[2][2] = (-zNear - zFar) / zRange; m[2][3] = 1.0f;
+        m[3][0] = 0.0f; m[3][1] = 0.0f; m[3][2] = 2.0f * zFar * zNear / zRange; m[3][3] = 0.0f;
     }
 };

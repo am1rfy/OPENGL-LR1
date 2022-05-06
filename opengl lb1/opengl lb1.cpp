@@ -8,7 +8,8 @@
 #include "Pipeline.h"
 #define ToRadian(x) ((x) * M_PI / 180.0f)
 #define ToDegree(x) ((x) * 180.0f / M_PI)
-
+#define WINDOW_WIDTH 1024
+#define WINDOW_HEIGHT 720
 // Буфер вершин
 GLuint VerticlesBuffer;
 
@@ -46,43 +47,12 @@ static void RenderSceneCB()
     static float offset = 0.0f;
     offset += 0.001f;
 
-    //// Единичная матрица
-    //glm::mat4x4 unit;
-    //unit[0][0] = 1.0f; unit[0][1] = 0.0f; unit[0][2] = 0.0f; unit[0][3] = 0.0f;
-    //unit[1][0] = 0.0f; unit[1][1] = 1.0f; unit[1][2] = 0.0f; unit[1][3] = 0.0f;
-    //unit[2][0] = 0.0f; unit[2][1] = 0.0f; unit[2][2] = 1.0f; unit[2][3] = 0.0f;
-    //unit[3][0] = 0.0f; unit[3][1] = 0.0f; unit[3][2] = 0.0f; unit[3][3] = 1.0f;
-
-    //// Матрица вращения
-    //glm::mat4x4 rotate;
-    //rotate[0][0] = sinf(offset); rotate[0][1] = -sinf(offset); rotate[0][2] = 0.0f; rotate[0][3] = 0.0f;
-    //rotate[1][0] = 0.0f; rotate[1][1] = 1.0f; rotate[1][2] = 0.0f; rotate[1][3] = 0.0f;
-    //rotate[2][0] = cosf(offset); rotate[2][1] = cosf(offset); rotate[2][2] = 1.0f; rotate[2][3] = 0.0f;
-    //rotate[3][0] = 0.0f; rotate[3][1] = 0.0f; rotate[3][2] = 0.0f; rotate[3][3] = 1.0f;
-
-    //// Матрица движения
-    //glm::mat4x4 move;
-    //move[0][0] = 1.0f; move[0][1] = 0.0f; move[0][2] = 0.0f; move[0][3] = sinf(offset);
-    //move[1][0] = 0.0f; move[1][1] = 1.0f; move[1][2] = 0.0f; move[1][3] = cosf(offset);
-    //move[2][0] = 0.0f; move[2][1] = 0.0f; move[2][2] = 1.0f; move[2][3] = 0.0f;
-    //move[3][0] = 0.0f; move[3][1] = 0.0f; move[3][2] = 0.0f; move[3][3] = 1.0f;
-
-    //// Матрица изменения размера
-    //glm::mat4x4 resize;
-    //resize[0][0] = sinf(offset); resize[0][1] = 0.0f; resize[0][2] = 0.0f; resize[0][3] = 0.0f;
-    //resize[1][0] = 0.0f; resize[1][1] = sinf(offset); resize[1][2] = 0.0f; resize[1][3] = 0.0f;
-    //resize[2][0] = 0.0f; resize[2][1] = 0.0f; resize[2][2] = sinf(offset); resize[2][3] = 0.0f;
-    //resize[3][0] = 0.0f; resize[3][1] = 0.0f; resize[3][2] = 0.0f; resize[3][3] = 1.0f;
-
-    //// Итоговая матрица
-    //glm::mat4x4 result = unit * rotate * move * resize;
-    //glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, &result[0][0]);
-
     //Преобразования
     Pipeline p;
     p.Scale(sinf(offset * 0.1f), sinf(offset * 0.1f), sinf(offset * 0.1f));
     p.WorldPos(sinf(offset), 0.0f, 0.0f);
     p.Rotate(sinf(offset) * 90.0f, sinf(offset) * 90.0f, sinf(offset) * 90.0f);
+    p.Perspectivee(60.0f, WINDOW_WIDTH, WINDOW_HEIGHT, 1.0f, 100.0f);
     glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, (const GLfloat*)p.getTransformation());
 
     // Использовать атрибуты вершин
@@ -219,7 +189,7 @@ int main(int argc, char** argv)
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 
     // Параметры окна
-    glutInitWindowSize(800, 600);
+    glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
     glutInitWindowPosition(300, 100);
     glutCreateWindow("DOTNET WINDOWS FORMS");
 
