@@ -139,10 +139,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="opengl lb1.cpp" />
+    <ClCompile Include="Pipeline.cpp" />
+    <ClCompile Include="math_3d.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Pipeline.h" />
+    <ClInclude Include="math_3d.h" />
+    <ClInclude Include="Strings.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
