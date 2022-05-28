@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <math.h>
 
 #include <GL/glew.h>
 #include <GL/freeglut.h>
@@ -23,24 +25,28 @@ GLuint gWorldLocation;
 GLuint IndexBuffer;
 
 Camera* camera = NULL;
+bool pause = false;
+
 
 static void RenderSceneCB() {
+    // Обновление камеры
     camera->OnRender();
     // Очистка буфера каждого кадра
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Смещение
     static float offset = 0.0f;
-    offset += 0.001f;
+    if (!pause) offset += 0.001f;
     // std::cout << offset << std::endl;
 
     //Преобразования
     Pipeline p;
-    p.Scale(sinf(offset * 0.3f), sinf(offset * 0.3f), sinf(offset * 0.3f));
-    // p.WorldPos(0, sinf(offset * 0.1f), 0);
     p.Rotate(0, offset * 30.0f, 0);
+    p.WorldPos(0, (abs(sinf(offset) * sinf(offset)) - 0.5f) * 0.3f, 0);
 
+    // Перспектива
     p.SetPerspectiveProj(60.0f, WINDOW_WIDTH, WINDOW_HEIGHT, 1.0f, 100.0f);
+    // Камера
     p.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
 
     glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, (const GLfloat*)p.getTransformation());
@@ -56,26 +62,34 @@ static void RenderSceneCB() {
     // Установка атрибутов вершин
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-    // Отрисовка
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+    // Отрисовка вершин куба
+    // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+    // Отрисовка вершин кристалла
+    glDrawElements(GL_TRIANGLES, 48, GL_UNSIGNED_INT, 0);
+
     // Отключение атрибутов вершины
     glDisableVertexAttribArray(0);
-
     // Меняет фоновый буфер и буфер рендера местами
     glutSwapBuffers();
 }
 
+// Движение камерой клавиатурой
 static void SpecialKeyboardCB(int Key, int x, int y) {
     camera->OnKeyboard(Key);
 }
-
+// Горячие клавиши
 static void KeyboardCB(unsigned char Key, int x, int y) {
     switch (Key) {
     case 'q':
         exit(0);
+    case 'p':
+        if (pause) pause = false;
+        else pause = true;
+        break;
     }
 }
-
+// Движение камерой мышью
 static void PassiveMouseCB(int x, int y) {
     camera->OnMouse(x, y);
 }
@@ -91,55 +105,54 @@ static void InitializeGlutCallbacks() {
 
 // Метод помещения вектора в буфер
 static void CreateVertexBuffer() {   
-    //glm::vec3 rectangle[4];
+    // Кристалл
+    Vector3f Vertices[10] = {
+        Vector3f(0.125f, 0.0f, -0.0625f),
+        Vector3f(-0.125f, 0.0f, -0.0625f),
+        Vector3f(-0.125f, 0.0f, 0.0625f),
+        Vector3f(0.125f, 0.0f, 0.0625f),
 
-    //rectangle[0] = glm::vec3(0.25f, -0.25f, 0.0f);
-    //rectangle[1] = glm::vec3(-0.25f, -0.25f, 0.0f);
-    //rectangle[2] = glm::vec3(-0.25f, 0.25f, 0.0f);
-    //rectangle[3] = glm::vec3(0.25f, 0.25f, 0.0f);
+        Vector3f(0.0625f, 0.0f, -0.125f),
+        Vector3f(-0.0625f, 0.0f, -0.125f),
+        Vector3f(-0.0625f, 0.0f, 0.125f),
+        Vector3f(0.0625f, 0.0f, 0.125f),
 
-    /*Vector3f Vertices[8];
-    Vertices[0] = Vector3f(0.25f, -0.25f, 0.0f);
-    Vertices[1] = Vector3f(-0.25f, -0.25f, 0.0f);
-    Vertices[2] = Vector3f(-0.25f, 0.25f, 0.0f);
-    Vertices[3] = Vector3f(0.25f, 0.25f, 0.0f);
-
-    Vertices[4] = Vector3f(0.25f, -0.25f, 0.25f);
-    Vertices[5] = Vector3f(-0.25f, -0.25f, 0.25f);
-    Vertices[6] = Vector3f(-0.25f, 0.25f, 0.25f);
-    Vertices[7] = Vector3f(0.25f, 0.25f, 0.25f);*/
-
-    Vector3f Vertices[24] = {
-        Vector3f(-0.25f, 0.25f, 0.25f),
-        Vector3f(0.25f, 0.25f, 0.25f),
-        Vector3f(-0.25f, -0.25f, 0.25f),
-        Vector3f(0.25f, -0.25f, 0.25f),
-
-        Vector3f(0.25f, 0.25f, 0.25f),
-        Vector3f(0.25f, 0.25f, -0.25f),
-        Vector3f(0.25f, -0.25f, 0.25f),
-        Vector3f(0.25f, -0.25f, -0.25f),
-        
-        Vector3f(0.25f, 0.25f, -0.25f),
-        Vector3f(-0.25f, 0.25f, -0.25f),
-        Vector3f(0.25f, -0.25f, -0.25f),
-        Vector3f(-0.25f, -0.25f, -0.25f),
-
-        Vector3f(-0.25f, 0.25f, -0.25f),
-        Vector3f(-0.25f, 0.25f, 0.25f),
-        Vector3f(-0.25f, -0.25f, -0.25f),
-        Vector3f(-0.25f, -0.25f, 0.25f),
-
-        Vector3f(-0.25f, 0.25f, -0.25f),
-        Vector3f(0.25f, 0.25f, -0.25f),
-        Vector3f(-0.25f, 0.25f, 0.25f),
-        Vector3f(0.25f, 0.25f, 0.25f),
-
-        Vector3f(-0.25f, -0.25f, 0.25f),
-        Vector3f(0.25f, -0.25f, 0.25f),
-        Vector3f(-0.25f, -0.25f, -0.25f),
-        Vector3f(0.25f, -0.25f, -0.25f),
+        Vector3f(0.0f, 0.5f, 0.0f),
+        Vector3f(0.0f, -0.5f, 0.0f),
     };
+
+    // Куб
+    //Vector3f Vertices[24] = {
+    //    Vector3f(-0.25f, 0.25f, 0.25f),
+    //    Vector3f(0.25f, 0.25f, 0.25f),
+    //    Vector3f(-0.25f, -0.25f, 0.25f),
+    //    Vector3f(0.25f, -0.25f, 0.25f),
+
+    //    Vector3f(0.25f, 0.25f, 0.25f),
+    //    Vector3f(0.25f, 0.25f, -0.25f),
+    //    Vector3f(0.25f, -0.25f, 0.25f),
+    //    Vector3f(0.25f, -0.25f, -0.25f),
+    //    
+    //    Vector3f(0.25f, 0.25f, -0.25f),
+    //    Vector3f(-0.25f, 0.25f, -0.25f),
+    //    Vector3f(0.25f, -0.25f, -0.25f),
+    //    Vector3f(-0.25f, -0.25f, -0.25f),
+
+    //    Vector3f(-0.25f, 0.25f, -0.25f),
+    //    Vector3f(-0.25f, 0.25f, 0.25f),
+    //    Vector3f(-0.25f, -0.25f, -0.25f),
+    //    Vector3f(-0.25f, -0.25f, 0.25f),
+
+    //    Vector3f(-0.25f, 0.25f, -0.25f),
+    //    Vector3f(0.25f, 0.25f, -0.25f),
+    //    Vector3f(-0.25f, 0.25f, 0.25f),
+    //    Vector3f(0.25f, 0.25f, 0.25f),
+
+    //    Vector3f(-0.25f, -0.25f, 0.25f),
+    //    Vector3f(0.25f, -0.25f, 0.25f),
+    //    Vector3f(-0.25f, -0.25f, -0.25f),
+    //    Vector3f(0.25f, -0.25f, -0.25f),
+    //};
 
     glGenBuffers(1, &VerticlesBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, VerticlesBuffer);
@@ -147,25 +160,47 @@ static void CreateVertexBuffer() {
 }
 
 static void CreateIndexBuffer() {
+    // Октаэдр
     unsigned int Indices[] = {
-        1, 3, 0,
-        0, 3, 2,
+        5, 4, 8,
+        4, 0, 8,
+        0, 3, 8,
+        3, 7, 8,
+        7, 6, 8,
+        6, 2, 8,
+        2, 1, 8,
+        1, 5, 8,
 
-        9, 11, 8,
-        8, 11, 10,
-
-        13, 15, 12,
-        12, 15, 14,
-
-        5, 7, 4,
-        4, 7, 6,
-
-        17, 19, 16,
-        16, 19, 18,
-
-        22, 20, 23,
-        23, 20, 21 
+        5, 4, 9,
+        4, 0, 9,
+        0, 3, 9,
+        3, 7, 9,
+        7, 6, 9,
+        6, 2, 9,
+        2, 1, 9,
+        1, 5, 9,
     };
+
+    // Куб
+    //unsigned int Indices[] = {
+    //    1, 3, 0,
+    //    0, 3, 2,
+
+    //    9, 11, 8,
+    //    8, 11, 10,
+
+    //    13, 15, 12,
+    //    12, 15, 14,
+
+    //    5, 7, 4,
+    //    4, 7, 6,
+
+    //    17, 19, 16,
+    //    16, 19, 18,
+
+    //    22, 20, 23,
+    //    23, 20, 21 
+    //};
 
     glGenBuffers(1, &IndexBuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
@@ -255,29 +290,34 @@ static void CompileShaders() {
 int main(int argc, char** argv)
 {
     // Инициализация окна
-    glutInit(&argc, argv);
+    {
+        
+        glutInit(&argc, argv);
 
-    // Двойная буферизация и буфер цвета
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+        // Двойная буферизация и буфер цвета
+        glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 
-    // Параметры окна
-    glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-    glutInitWindowPosition(300, 100);
-    glutCreateWindow("DOTNET WINDOWS FORMS");
+        // Параметры окна
+        glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+        glutInitWindowPosition(250, 40);
+        glutCreateWindow(".NET WINDOWS FORMS");
 
-    // Отрисовка кадра в окне
-    InitializeGlutCallbacks();
+        // Отрисовка кадра в окне
+        InitializeGlutCallbacks();
+    }
 
     // Инициализация камеры
     camera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT);
 
     // Инициализация glew
-    GLenum res = glewInit();
-    if (res != GLEW_OK) {
-        fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
-        return 1;
+    {
+        GLenum res = glewInit();
+        if (res != GLEW_OK) {
+            fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
+            return 1;
+        }
     }
-
+    
     // Устанавливается черный цвет при очистке буфера
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
