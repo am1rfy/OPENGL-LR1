@@ -17,6 +17,8 @@
 #include "math_3d.h"
 #include "Texture.h"
 #include "Strings.h"
+#include "Technique.h"
+#include "Lighting.h"
 
 #define WINDOW_WIDTH 1024
 #define WINDOW_HEIGHT 720
@@ -28,6 +30,8 @@ GLuint Sampler;
 
 Camera* camera = NULL;
 Texture* texture = NULL;
+LightingTechnique* effect = NULL;
+DirectionLight directionalLight;
 
 bool pause = false;
 
@@ -50,6 +54,9 @@ static void RenderSceneCB() {
     p.SetPerspectiveProj(60.0f, WINDOW_WIDTH, WINDOW_HEIGHT, 1.0f, 100.0f);
     // Камера
     p.SetCamera(camera->GetPos(), camera->GetTarget(), camera->GetUp());
+
+    effect->SetWVP(p.getTransformation());
+    effect->SetDirectionalLight(directionalLight);
 
     glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, (const GLfloat*)p.getTransformation());
 
@@ -94,6 +101,12 @@ static void KeyboardCB(unsigned char Key, int x, int y) {
     case 'p':
         if (pause) pause = false;
         else pause = true;
+        break;
+    case 'a':
+        directionalLight.AmbientIntensity += 0.05f;
+        break;
+    case 's':
+        directionalLight.AmbientIntensity -= 0.05f;
         break;
     }
 }
@@ -297,11 +310,9 @@ static void CompileShaders() {
     assert(Sampler != 0xFFFFFFFF);
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     // Инициализация окна
     {
-        
         glutInit(&argc, argv);
 
         // Двойная буферизация и буфер цвета
@@ -332,9 +343,11 @@ int main(int argc, char** argv)
     glClearColor(0.5f, 0.0f, 1.0f, 0.0f);
 
     // Оптимизации текстур
-    glFrontFace(GL_CW);
-    glCullFace(GL_BACK);
-    glEnable(GL_CULL_FACE);
+    {
+        glFrontFace(GL_CW);
+        glCullFace(GL_BACK);
+        glEnable(GL_CULL_FACE);
+    }
 
     // Создание буфера вершин
     CreateVertexBuffer();
@@ -345,6 +358,17 @@ int main(int argc, char** argv)
 
     // Установка индексов текстур, для последующего использования внутри шейдеров
     glUniform1i(Sampler, 0);
+
+    // Инициализация освещения
+    effect = new LightingTechnique();
+    if (!effect->Init()) 
+        return 1;
+
+    effect->Enable();
+    effect->SetTextureUnit(0);
+
+    directionalLight.Color = Vector3f(1.0f, 1.0f, 1.0f);
+    directionalLight.AmbientIntensity = 0.5f;
 
     // Инициализация шейдера
     texture = new Texture(GL_TEXTURE_2D, "img\\pepe.jpg");

@@ -1,7 +1,6 @@
 #ifndef STRINGS_H
 #define	STRINGS_H
 
-
 // Вершинный шейдер
 static const char* pVS = "                                                          \n\
 #version 330                                                                        \n\
@@ -27,11 +26,20 @@ in vec2 TexCoord0;                                                              
                                                                                     \n\
 out vec4 FragColor;                                                                 \n\
                                                                                     \n\
+struct DirectionalLight                                                             \n\
+{                                                                                   \n\
+    vec3 Color;                                                                     \n\
+    float AmbientIntensity;                                                         \n\
+};                                                                                  \n\
+                                                                                    \n\
+uniform DirectionalLight gDirectionalLight;                                         \n\
 uniform sampler2D gSampler;                                                         \n\
                                                                                     \n\
 void main()                                                                         \n\
 {                                                                                   \n\
-    FragColor = texture2D(gSampler, TexCoord0.xy);                                  \n\
+    FragColor = texture2D(gSampler, TexCoord0.xy) *                                 \n\
+                vec4(gDirectionalLight.Color, 1.0f) *                               \n\
+                gDirectionalLight.AmbientIntensity;                                 \n\
 }";
 
 #endif
