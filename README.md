@@ -1,236 +1,171 @@
-# OPENGL PART 2
+# OPENGL PART 3 with textures
 
 ### Main requerement: https://github.com/microsoft/vcpkg
 **Install the necessary dependencies listed in the README of this repository**
+- ##### freeglut
+- ##### glew
+- ##### glm
+- ##### ImageMagick (Magick++ for C++)
 
-> Creating a class to merge shader transformations
+### What's New
+- ##### Added texture to a shape (custom look)
+
+### Code
+> Texture class
+> Implementation of the methods is in the file Texture.cpp 
 ```c++
-  class Pipeline
-  {
-  private:
-      glm::vec3 scale;
-      glm::vec3 worldPos;
-      glm::vec3 rotateInfo;
-      glm::mat4 transformation;
+using namespace Magick;
 
-  public:
-      Pipeline() {
-          scale = glm::vec3(1.0f, 1.0f, 1.0f);
-          worldPos = glm::vec3(0.0f, 0.0f, 0.0f);
-          rotateInfo = glm::vec3(0.0f, 0.0f, 0.0f);
-      }
+class Texture {
+public:
+    Texture(GLenum TextureTarget, const std::string& FileName);
+    bool Load();
+    void Bind(GLenum TextureUnit);
 
-      void Scale(float ScaleX, float ScaleY, float ScaleZ) {
-          scale.x = ScaleX;
-          scale.y = ScaleY;
-          scale.z = ScaleZ;
-      }
-
-      void WorldPos(float x, float y, float z) {
-          worldPos.x = x;
-          worldPos.y = y;
-          worldPos.z = z;
-      }
-
-      void Rotate(float RotateX, float RotateY, float RotateZ) {
-          rotateInfo.x = RotateX;
-          rotateInfo.y = RotateY;
-          rotateInfo.z = RotateZ;
-      }
-
-      const glm::mat4* getTransformation() {
-          glm::mat4 ScaleTrans, RotateTrans, TranslationTrans;
-          InitScaleTransform(ScaleTrans);
-          InitRotateTransform(RotateTrans);
-          InitTranslationTransform(TranslationTrans);
-          transformation = TranslationTrans * RotateTrans * ScaleTrans;
-          return &transformation;
-      }
-
-      void InitScaleTransform(glm::mat4& m) const {
-          m[0][0] = scale.x; m[0][1] = 0.0f; m[0][2] = 0.0f; m[0][3] = 0.0f;
-          m[1][0] = 0.0f; m[1][1] = scale.y; m[1][2] = 0.0f; m[1][3] = 0.0f;
-          m[2][0] = 0.0f; m[2][1] = 0.0f; m[2][2] = scale.z; m[2][3] = 0.0f;
-          m[3][0] = 0.0f; m[3][1] = 0.0f; m[3][2] = 0.0f; m[3][3] = 1.0f;
-      }
-
-      void InitRotateTransform(glm::mat4& m) const {
-          glm::mat4 rx, ry, rz;
-
-          const float x = ToRadian(rotateInfo.x);
-          const float y = ToRadian(rotateInfo.y);
-          const float z = ToRadian(rotateInfo.z);
-
-          rx[0][0] = 1.0f; rx[0][1] = 0.0f; rx[0][2] = 0.0f; rx[0][3] = 0.0f;
-          rx[1][0] = 0.0f; rx[1][1] = cosf(x); rx[1][2] = -sinf(x); rx[1][3] = 0.0f;
-          rx[2][0] = 0.0f; rx[2][1] = sinf(x); rx[2][2] = cosf(x); rx[2][3] = 0.0f;
-          rx[3][0] = 0.0f; rx[3][1] = 0.0f; rx[3][2] = 0.0f; rx[3][3] = 1.0f;
-
-          ry[0][0] = cosf(y); ry[0][1] = 0.0f; ry[0][2] = -sinf(y); ry[0][3] = 0.0f;
-          ry[1][0] = 0.0f; ry[1][1] = 1.0f; ry[1][2] = 0.0f; ry[1][3] = 0.0f;
-          ry[2][0] = sinf(y); ry[2][1] = 0.0f; ry[2][2] = cosf(y); ry[2][3] = 0.0f;
-          ry[3][0] = 0.0f; ry[3][1] = 0.0f; ry[3][2] = 0.0f; ry[3][3] = 1.0f;
-
-          rz[0][0] = cosf(z); rz[0][1] = -sinf(z); rz[0][2] = 0.0f; rz[0][3] = 0.0f;
-          rz[1][0] = sinf(z); rz[1][1] = cosf(z); rz[1][2] = 0.0f; rz[1][3] = 0.0f;
-          rz[2][0] = 0.0f; rz[2][1] = 0.0f; rz[2][2] = 1.0f; rz[2][3] = 0.0f;
-          rz[3][0] = 0.0f; rz[3][1] = 0.0f; rz[3][2] = 0.0f; rz[3][3] = 1.0f;
-
-          m = rz * ry * rx;
-      }
-
-      void InitTranslationTransform(glm::mat4& m) const
-      {
-          m[0][0] = 1.0f; m[0][1] = 0.0f; m[0][2] = 0.0f; m[0][3] = worldPos.x;
-          m[1][0] = 0.0f; m[1][1] = 1.0f; m[1][2] = 0.0f; m[1][3] = worldPos.y;
-          m[2][0] = 0.0f; m[2][1] = 0.0f; m[2][2] = 1.0f; m[2][3] = worldPos.z;
-          m[3][0] = 0.0f; m[3][1] = 0.0f; m[3][2] = 0.0f; m[3][3] = 1.0f;
-      }
-  };
-```
-### Then in RenderSceneCB function:
-
-> Offset
-```c++
-      static float offset = 0.0f;
-      offset += 0.001f;
+private:
+    std::string fileName;
+    GLenum textureTarget;
+    GLuint textureObj;
+    Image* image;
+    Blob blob;
+};
 ```
 
-> Unit matrix
+> Updating the vertex and fragment shader at "Strings.h"
 ```c++
-    glm::mat4x4 unit;
-    unit[0][0] = 1.0f; unit[0][1] = 0.0f; unit[0][2] = 0.0f; unit[0][3] = 0.0f;
-    unit[1][0] = 0.0f; unit[1][1] = 1.0f; unit[1][2] = 0.0f; unit[1][3] = 0.0f;
-    unit[2][0] = 0.0f; unit[2][1] = 0.0f; unit[2][2] = 1.0f; unit[2][3] = 0.0f;
-    unit[3][0] = 0.0f; unit[3][1] = 0.0f; unit[3][2] = 0.0f; unit[3][3] = 1.0f;
+// vertex shader
+static const char* pVS = "                                                          \n\
+#version 330                                                                        \n\
+                                                                                    \n\
+layout (location = 0) in vec3 Position;                                             \n\
+layout (location = 1) in vec2 TexCoord;                                             \n\
+                                                                                    \n\
+uniform mat4 gWVP;                                                                  \n\
+                                                                                    \n\
+out vec2 TexCoord0;                                                                 \n\
+                                                                                    \n\
+void main()                                                                         \n\
+{                                                                                   \n\
+    gl_Position = gWVP * vec4(Position, 1.0);                                       \n\
+    TexCoord0 = TexCoord;                                                           \n\
+}";
+
+// fragment shader
+static const char* pFS = "                                                          \n\
+#version 330                                                                        \n\
+                                                                                    \n\
+in vec2 TexCoord0;                                                                  \n\
+                                                                                    \n\
+out vec4 FragColor;                                                                 \n\
+                                                                                    \n\
+uniform sampler2D gSampler;                                                         \n\
+                                                                                    \n\
+void main()                                                                         \n\
+{                                                                                   \n\
+    FragColor = texture2D(gSampler, TexCoord0.xy);                                  \n\
+}";
 ```
 
-> Rotating matrix
+> Сhanges at executable file
+
+- Global variables
 ```c++
-    glm::mat4x4 rotate;
-    rotate[0][0] = sinf(offset); rotate[0][1] = -sinf(offset); rotate[0][2] = 0.0f; rotate[0][3] = 0.0f;
-    rotate[1][0] = 0.0f; rotate[1][1] = 1.0f; rotate[1][2] = 0.0f; rotate[1][3] = 0.0f;
-    rotate[2][0] = cosf(offset); rotate[2][1] = cosf(offset); rotate[2][2] = 1.0f; rotate[2][3] = 0.0f;
-    rotate[3][0] = 0.0f; rotate[3][1] = 0.0f; rotate[3][2] = 0.0f; rotate[3][3] = 1.0f;
+GLuint Sampler;
+Texture* texture = NULL;
 ```
 
-> Movement matrix
+- Description of the Vertex structure to bind each vertex to a picture coordinate
 ```c++
-    glm::mat4x4 move;
-    move[0][0] = 1.0f; move[0][1] = 0.0f; move[0][2] = 0.0f; move[0][3] = sinf(offset);
-    move[1][0] = 0.0f; move[1][1] = 1.0f; move[1][2] = 0.0f; move[1][3] = cosf(offset);
-    move[2][0] = 0.0f; move[2][1] = 0.0f; move[2][2] = 1.0f; move[2][3] = 0.0f;
-    move[3][0] = 0.0f; move[3][1] = 0.0f; move[3][2] = 0.0f; move[3][3] = 1.0f;
-```
-> Resizing matrix
-```c++
-    glm::mat4x4 resize;
-    resize[0][0] = sinf(offset); resize[0][1] = 0.0f; resize[0][2] = 0.0f; resize[0][3] = 0.0f;
-    resize[1][0] = 0.0f; resize[1][1] = sinf(offset); resize[1][2] = 0.0f; resize[1][3] = 0.0f;
-    resize[2][0] = 0.0f; resize[2][1] = 0.0f; resize[2][2] = sinf(offset); resize[2][3] = 0.0f;
-    resize[3][0] = 0.0f; resize[3][1] = 0.0f; resize[3][2] = 0.0f; resize[3][3] = 1.0f;
-```
-
-> Resulting matrix (mul of all matrices described above)
-```c++
-    glm::mat4x4 result = unit * rotate * move * resize;
-    glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, &result[0][0]);
-```
-
-> Transformations of the resultant matrix
-```c++
-    Pipeline p;
-    p.Scale(sinf(offset * 0.1f), sinf(offset * 0.1f), sinf(offset * 0.1f));
-    p.WorldPos(sinf(offset), 0.0f, 0.0f);
-    p.Rotate(sinf(offset) * 90.0f, sinf(offset) * 90.0f, sinf(offset) * 90.0f);
-    glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, (const GLfloat*)p.getTransformation());
-```
-
-### Added AddShader function 
-
-```c++
-static void AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType) {
-    // Creating a shader
-    GLuint ShaderObj = glCreateShader(ShaderType);
-
-    // Error handling
-    if (ShaderObj == 0) {
-        fprintf(stderr, "Error creating shader type %d\n", ShaderType);
-        exit(0);
-    }
-
-    // Saving shader code
-    const GLchar* p[1];
-    p[0] = pShaderText;
-
-    // Shader Code Length Array
-    GLint Lengths[1];
-    Lengths[0] = strlen(pShaderText);
-
-    // Setting the shader sources
-    glShaderSource(ShaderObj, 1, p, Lengths);
-    // Компилируем шейдер
-    glCompileShader(ShaderObj);
-
-    // Error handling (shader didn't compile)
-    GLint success;
-    glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        GLchar InfoLog[1024];
-        glGetShaderInfoLog(ShaderObj, 1024, NULL, InfoLog);
-        fprintf(stderr, "Error compiling shader type %d: '%s'\n", ShaderType, InfoLog);
-        exit(1);
-    }
-
-    // Compiled shader object 
-    glAttachShader(ShaderProgram, ShaderObj);
-}
-```
-
-### Added CompileShaders function
-
-```c++
-static void CompileShaders()
+struct Vertex
 {
-    // Creating a shader program
-    GLuint ShaderProgram = glCreateProgram();
+    glm::vec3 m_pos;
+    glm::vec2 m_tex;
 
-    // Handling a shader program creation error
-    if (ShaderProgram == 0) {
-        fprintf(stderr, "Error creating shader program\n");
-        exit(1);
+    Vertex() {}
+
+    Vertex(glm::vec3 pos, glm::vec2 tex)
+    {
+        m_pos = pos;
+        m_tex = tex;
     }
-
-    // Adding a vertex shader
-    AddShader(ShaderProgram, pVS, GL_VERTEX_SHADER);
-    AddShader(ShaderProgram, pFS, GL_FRAGMENT_SHADER);
-
-    GLint Success = 0;
-    GLchar ErrorLog[1024] = { 0 };
-
-    // Checking program response
-    glLinkProgram(ShaderProgram);
-    glGetProgramiv(ShaderProgram, GL_LINK_STATUS, &Success);
-    if (Success == 0) {
-        glGetProgramInfoLog(ShaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
-        fprintf(stderr, "Error linking shader program: '%s'\n", ErrorLog);
-        exit(1);
-    }
-
-    // Program validation
-    glValidateProgram(ShaderProgram);
-    glGetProgramiv(ShaderProgram, GL_VALIDATE_STATUS, &Success);
-    if (!Success) {
-        glGetProgramInfoLog(ShaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
-        fprintf(stderr, "Invalid shader program: '%s'\n", ErrorLog);
-        exit(1);
-    }
-
-    // GLEW now uses this shader program
-    glUseProgram(ShaderProgram);
-
-    // saving to the gWorldLocation variable
-    gWorldLocation = glGetUniformLocation(ShaderProgram, "gWorld");
-    assert(gWorldLocation != 0xFFFFFFFF);
-}
+};
 ```
+
+- Update the vertex buffer function
+```c++
+Vertex Vertices[24] = {
+        Vertex(Vector3f(-0.25f, 0.25f, 0.25f), Vector2f(0.0f, 0.0f)),
+        Vertex(Vector3f(0.25f, 0.25f, 0.25f), Vector2f(1.0f, 0.0f)),
+        Vertex(Vector3f(-0.25f, -0.25f, 0.25f), Vector2f(0.0f, 1.0f)),
+        Vertex(Vector3f(0.25f, -0.25f, 0.25f), Vector2f(1.0f, 1.0f)),
+
+        Vertex(Vector3f(0.25f, 0.25f, 0.25f), Vector2f(0.0f, 0.0f)),
+        Vertex(Vector3f(0.25f, 0.25f, -0.25f), Vector2f(1.0f, 0.0f)),
+        Vertex(Vector3f(0.25f, -0.25f, 0.25f), Vector2f(0.0f, 1.0f)),
+        Vertex(Vector3f(0.25f, -0.25f, -0.25f), Vector2f(1.0f, 1.0f)),
+
+        Vertex(Vector3f(0.25f, 0.25f, -0.25f), Vector2f(0.0f, 0.0f)),
+        Vertex(Vector3f(-0.25f, 0.25f, -0.25f), Vector2f(1.0f, 0.0f)),
+        Vertex(Vector3f(0.25f, -0.25f, -0.25f), Vector2f(0.0f, 1.0f)),
+        Vertex(Vector3f(-0.25f, -0.25f, -0.25f), Vector2f(1.0f, 1.0f)),
+
+        Vertex(Vector3f(-0.25f, 0.25f, -0.25f), Vector2f(0.0f, 0.0f)),
+        Vertex(Vector3f(-0.25f, 0.25f, 0.25f), Vector2f(1.0f, 0.0f)),
+        Vertex(Vector3f(-0.25f, -0.25f, -0.25f), Vector2f(0.0f, 1.0f)),
+        Vertex(Vector3f(-0.25f, -0.25f, 0.25f), Vector2f(1.0f, 1.0f)),
+
+        Vertex(Vector3f(-0.25f, 0.25f, -0.25f), Vector2f(0.0f, 0.0f)),
+        Vertex(Vector3f(0.25f, 0.25f, -0.25f), Vector2f(1.0f, 0.0f)),
+        Vertex(Vector3f(-0.25f, 0.25f, 0.25f), Vector2f(0.0f, 1.0f)),
+        Vertex(Vector3f(0.25f, 0.25f, 0.25f),Vector2f(1.0f, 1.0f)),
+
+        Vertex(Vector3f(-0.25f, -0.25f, 0.25f), Vector2f(0.0f, 0.0f)),
+        Vertex(Vector3f(0.25f, -0.25f, 0.25f), Vector2f(1.0f, 0.0f)),
+        Vertex(Vector3f(-0.25f, -0.25f, -0.25f), Vector2f(0.0f, 1.0f)),
+        Vertex(Vector3f(0.25f, -0.25f, -0.25f), Vector2f(1.0f, 1.0f)),
+    };
+```
+
+- Render function (only changes)
+```c++
+    // Bind the buffer for drawing
+    glBindBuffer(GL_ARRAY_BUFFER, VerticlesBuffer);
+    // Set vertex attributes
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)12);
+    // Bind the index buffer for drawing
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer); 
+    // Set textures
+    texture->Bind(GL_TEXTURE0);
+    // Drawing the vertices of the cube
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+```
+
+- CompileShaders function (only changes)
+```c++
+    // save to the gWorldLocation variable
+    gWorldLocation = glGetUniformLocation(ShaderProgram, "gWVP");
+    assert(gWorldLocation != 0xFFFFFFFFFF);
+    Sampler = glGetUniformLocation(ShaderProgram, "gSampler");
+    assert(Sampler != 0xFFFFFFFFFF);
+```
+
+- Main function (only changes)
+```c++
+    // Texture Optimization
+    glFrontFace(GL_CW);
+    glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
+    
+    // Set texture indices for later use within shaders
+    glUniform1i(Sampler, 0);
+    
+    // Shader init
+    texture = new Texture(GL_TEXTURE_2D, "img\\pepe.jpg");
+    if (!texture->Load())
+        return 1;
+```
+
+### Working demo
+
+![Screenshot](screen_3lr_with_pic.png)
