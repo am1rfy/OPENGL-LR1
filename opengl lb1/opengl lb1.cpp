@@ -15,6 +15,7 @@
 #include "Pipeline.h"
 #include "Camera.h"
 #include "math_3d.h"
+#include "Texture.h"
 #include "Strings.h"
 
 #define WINDOW_WIDTH 1024
@@ -23,10 +24,12 @@
 GLuint VerticlesBuffer;
 GLuint gWorldLocation;
 GLuint IndexBuffer;
+GLuint Sampler;
 
 Camera* camera = NULL;
-bool pause = false;
+Texture* texture = NULL;
 
+bool pause = false;
 
 static void RenderSceneCB() {
     // Обновление камеры
@@ -37,13 +40,12 @@ static void RenderSceneCB() {
     // Смещение
     static float offset = 0.0f;
     if (!pause) offset += 0.001f;
-    // std::cout << offset << std::endl;
 
     //Преобразования
     Pipeline p;
     p.Rotate(0, offset * 30.0f, 0);
-    p.WorldPos(0, (abs(sinf(offset) * sinf(offset)) - 0.5f) * 0.3f, 0);
-
+    p.WorldPos(0, (abs(sinf(offset) * sinf(offset)) - 0.5f) * 0.15f, 0);
+    p.Scale(abs(sinf(offset * 0.1f)), abs(sinf(offset * 0.1f)), abs(sinf(offset * 0.1f)));
     // Перспектива
     p.SetPerspectiveProj(60.0f, WINDOW_WIDTH, WINDOW_HEIGHT, 1.0f, 100.0f);
     // Камера
@@ -51,25 +53,31 @@ static void RenderSceneCB() {
 
     glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, (const GLfloat*)p.getTransformation());
 
-    // Использовать атрибуты вершин 
+    // Использовать атрибуты вершин
     glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
 
     // Привязка буфера для отрисовки
     glBindBuffer(GL_ARRAY_BUFFER, VerticlesBuffer);
-    // Привязка индексного буфера для отрисовки
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer); 
 
     // Установка атрибутов вершин
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)12);
 
+    // Привязка индексного буфера для отрисовки
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer); 
+    // Установка текстур
+    texture->Bind(GL_TEXTURE0);
     // Отрисовка вершин куба
-    // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
     // Отрисовка вершин кристалла
-    glDrawElements(GL_TRIANGLES, 48, GL_UNSIGNED_INT, 0);
+    // glDrawElements(GL_TRIANGLES, 48, GL_UNSIGNED_INT, 0);
 
     // Отключение атрибутов вершины
     glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+
     // Меняет фоновый буфер и буфер рендера местами
     glutSwapBuffers();
 }
@@ -106,53 +114,53 @@ static void InitializeGlutCallbacks() {
 // Метод помещения вектора в буфер
 static void CreateVertexBuffer() {   
     // Кристалл
-    Vector3f Vertices[10] = {
-        Vector3f(0.125f, 0.0f, -0.0625f),
-        Vector3f(-0.125f, 0.0f, -0.0625f),
-        Vector3f(-0.125f, 0.0f, 0.0625f),
-        Vector3f(0.125f, 0.0f, 0.0625f),
+    //Vector3f Vertices[10] = {
+    //    Vector3f(0.125f, 0.0f, -0.0625f),
+    //    Vector3f(-0.125f, 0.0f, -0.0625f),
+    //    Vector3f(-0.125f, 0.0f, 0.0625f),
+    //    Vector3f(0.125f, 0.0f, 0.0625f),
 
-        Vector3f(0.0625f, 0.0f, -0.125f),
-        Vector3f(-0.0625f, 0.0f, -0.125f),
-        Vector3f(-0.0625f, 0.0f, 0.125f),
-        Vector3f(0.0625f, 0.0f, 0.125f),
+    //    Vector3f(0.0625f, 0.0f, -0.125f),
+    //    Vector3f(-0.0625f, 0.0f, -0.125f),
+    //    Vector3f(-0.0625f, 0.0f, 0.125f),
+    //    Vector3f(0.0625f, 0.0f, 0.125f),
 
-        Vector3f(0.0f, 0.5f, 0.0f),
-        Vector3f(0.0f, -0.5f, 0.0f),
-    };
+    //    Vector3f(0.0f, 0.5f, 0.0f),
+    //    Vector3f(0.0f, -0.5f, 0.0f),
+    //};
 
     // Куб
-    //Vector3f Vertices[24] = {
-    //    Vector3f(-0.25f, 0.25f, 0.25f),
-    //    Vector3f(0.25f, 0.25f, 0.25f),
-    //    Vector3f(-0.25f, -0.25f, 0.25f),
-    //    Vector3f(0.25f, -0.25f, 0.25f),
+    Vertex Vertices[24] = {
+        Vertex(Vector3f(-0.25f, 0.25f, 0.25f), Vector2f(0.0f, 0.0f)),
+        Vertex(Vector3f(0.25f, 0.25f, 0.25f), Vector2f(1.0f, 0.0f)),
+        Vertex(Vector3f(-0.25f, -0.25f, 0.25f), Vector2f(0.0f, 1.0f)),
+        Vertex(Vector3f(0.25f, -0.25f, 0.25f), Vector2f(1.0f, 1.0f)),
 
-    //    Vector3f(0.25f, 0.25f, 0.25f),
-    //    Vector3f(0.25f, 0.25f, -0.25f),
-    //    Vector3f(0.25f, -0.25f, 0.25f),
-    //    Vector3f(0.25f, -0.25f, -0.25f),
-    //    
-    //    Vector3f(0.25f, 0.25f, -0.25f),
-    //    Vector3f(-0.25f, 0.25f, -0.25f),
-    //    Vector3f(0.25f, -0.25f, -0.25f),
-    //    Vector3f(-0.25f, -0.25f, -0.25f),
+        Vertex(Vector3f(0.25f, 0.25f, 0.25f), Vector2f(0.0f, 0.0f)),
+        Vertex(Vector3f(0.25f, 0.25f, -0.25f), Vector2f(1.0f, 0.0f)),
+        Vertex(Vector3f(0.25f, -0.25f, 0.25f), Vector2f(0.0f, 1.0f)),
+        Vertex(Vector3f(0.25f, -0.25f, -0.25f), Vector2f(1.0f, 1.0f)),
 
-    //    Vector3f(-0.25f, 0.25f, -0.25f),
-    //    Vector3f(-0.25f, 0.25f, 0.25f),
-    //    Vector3f(-0.25f, -0.25f, -0.25f),
-    //    Vector3f(-0.25f, -0.25f, 0.25f),
+        Vertex(Vector3f(0.25f, 0.25f, -0.25f), Vector2f(0.0f, 0.0f)),
+        Vertex(Vector3f(-0.25f, 0.25f, -0.25f), Vector2f(1.0f, 0.0f)),
+        Vertex(Vector3f(0.25f, -0.25f, -0.25f), Vector2f(0.0f, 1.0f)),
+        Vertex(Vector3f(-0.25f, -0.25f, -0.25f), Vector2f(1.0f, 1.0f)),
 
-    //    Vector3f(-0.25f, 0.25f, -0.25f),
-    //    Vector3f(0.25f, 0.25f, -0.25f),
-    //    Vector3f(-0.25f, 0.25f, 0.25f),
-    //    Vector3f(0.25f, 0.25f, 0.25f),
+        Vertex(Vector3f(-0.25f, 0.25f, -0.25f), Vector2f(0.0f, 0.0f)),
+        Vertex(Vector3f(-0.25f, 0.25f, 0.25f), Vector2f(1.0f, 0.0f)),
+        Vertex(Vector3f(-0.25f, -0.25f, -0.25f), Vector2f(0.0f, 1.0f)),
+        Vertex(Vector3f(-0.25f, -0.25f, 0.25f), Vector2f(1.0f, 1.0f)),
 
-    //    Vector3f(-0.25f, -0.25f, 0.25f),
-    //    Vector3f(0.25f, -0.25f, 0.25f),
-    //    Vector3f(-0.25f, -0.25f, -0.25f),
-    //    Vector3f(0.25f, -0.25f, -0.25f),
-    //};
+        Vertex(Vector3f(-0.25f, 0.25f, -0.25f), Vector2f(0.0f, 0.0f)),
+        Vertex(Vector3f(0.25f, 0.25f, -0.25f), Vector2f(1.0f, 0.0f)),
+        Vertex(Vector3f(-0.25f, 0.25f, 0.25f), Vector2f(0.0f, 1.0f)),
+        Vertex(Vector3f(0.25f, 0.25f, 0.25f),Vector2f(1.0f, 1.0f)),
+
+        Vertex(Vector3f(-0.25f, -0.25f, 0.25f), Vector2f(0.0f, 0.0f)),
+        Vertex(Vector3f(0.25f, -0.25f, 0.25f), Vector2f(1.0f, 0.0f)),
+        Vertex(Vector3f(-0.25f, -0.25f, -0.25f), Vector2f(0.0f, 1.0f)),
+        Vertex(Vector3f(0.25f, -0.25f, -0.25f), Vector2f(1.0f, 1.0f)),
+    };
 
     glGenBuffers(1, &VerticlesBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, VerticlesBuffer);
@@ -160,47 +168,47 @@ static void CreateVertexBuffer() {
 }
 
 static void CreateIndexBuffer() {
-    // Октаэдр
-    unsigned int Indices[] = {
-        5, 4, 8,
-        4, 0, 8,
-        0, 3, 8,
-        3, 7, 8,
-        7, 6, 8,
-        6, 2, 8,
-        2, 1, 8,
-        1, 5, 8,
+    // Кристалл
+    //unsigned int Indices[] = {
+    //    5, 4, 8,
+    //    4, 0, 8,
+    //    0, 3, 8,
+    //    3, 7, 8,
+    //    7, 6, 8,
+    //    6, 2, 8,
+    //    2, 1, 8,
+    //    1, 5, 8,
 
-        5, 4, 9,
-        4, 0, 9,
-        0, 3, 9,
-        3, 7, 9,
-        7, 6, 9,
-        6, 2, 9,
-        2, 1, 9,
-        1, 5, 9,
-    };
+    //    5, 4, 9,
+    //    4, 0, 9,
+    //    0, 3, 9,
+    //    3, 7, 9,
+    //    7, 6, 9,
+    //    6, 2, 9,
+    //    2, 1, 9,
+    //    1, 5, 9,
+    //};
 
     // Куб
-    //unsigned int Indices[] = {
-    //    1, 3, 0,
-    //    0, 3, 2,
+    unsigned int Indices[] = {
+        1, 3, 0,
+        0, 3, 2,
 
-    //    9, 11, 8,
-    //    8, 11, 10,
+        9, 11, 8,
+        8, 11, 10,
 
-    //    13, 15, 12,
-    //    12, 15, 14,
+        13, 15, 12,
+        12, 15, 14,
 
-    //    5, 7, 4,
-    //    4, 7, 6,
+        5, 7, 4,
+        4, 7, 6,
 
-    //    17, 19, 16,
-    //    16, 19, 18,
+        17, 19, 16,
+        16, 19, 18,
 
-    //    22, 20, 23,
-    //    23, 20, 21 
-    //};
+        22, 20, 23,
+        23, 20, 21 
+    };
 
     glGenBuffers(1, &IndexBuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
@@ -283,8 +291,10 @@ static void CompileShaders() {
     glUseProgram(ShaderProgram);
 
     // сохранение в переменную gWorldLocation
-    gWorldLocation = glGetUniformLocation(ShaderProgram, "gWorld");
+    gWorldLocation = glGetUniformLocation(ShaderProgram, "gWVP");
     assert(gWorldLocation != 0xFFFFFFFF);
+    Sampler = glGetUniformLocation(ShaderProgram, "gSampler");
+    assert(Sampler != 0xFFFFFFFF);
 }
 
 int main(int argc, char** argv)
@@ -317,9 +327,14 @@ int main(int argc, char** argv)
             return 1;
         }
     }
-    
-    // Устанавливается черный цвет при очистке буфера
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+     
+    /*glClearColor(1.0f, 1.0f, 0.4f, 0.0f);*/
+    glClearColor(0.5f, 0.0f, 1.0f, 0.0f);
+
+    // Оптимизации текстур
+    glFrontFace(GL_CW);
+    glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
 
     // Создание буфера вершин
     CreateVertexBuffer();
@@ -328,8 +343,16 @@ int main(int argc, char** argv)
     // Создание шейдера
     CompileShaders();
 
+    // Установка индексов текстур, для последующего использования внутри шейдеров
+    glUniform1i(Sampler, 0);
+
+    // Инициализация шейдера
+    texture = new Texture(GL_TEXTURE_2D, "img\\pepe.jpg");
+    if (!texture->Load())
+        return 1;
+
     // glut постоянно вызывает отрисовку
     glutMainLoop();
 
     return 0;
-}
+} 

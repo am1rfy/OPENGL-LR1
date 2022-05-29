@@ -13,6 +13,18 @@ struct Vector2i {
     int x, y;
 };
 
+struct Vector2f
+{
+    float x, y;
+
+    Vector2f() {}
+
+    Vector2f(float _x, float _y) {
+        x = _x;
+        y = _y;
+    }
+};
+
 struct Vector3f {
     float x, y, z;
 
@@ -130,5 +142,17 @@ struct Quaternion {
 Quaternion operator*(const Quaternion& l, const Quaternion& r);
 
 Quaternion operator*(const Quaternion& q, const Vector3f& v);
+
+struct Vertex {
+    Vector3f pos;
+    Vector2f tex;
+
+    Vertex() {}
+
+    Vertex(Vector3f pos, Vector2f tex) {
+        (*this).pos = pos;
+        (*this).tex = tex;
+    }
+};
 
 #endif

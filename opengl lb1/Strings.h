@@ -1,24 +1,37 @@
-#pragma once
+#ifndef STRINGS_H
+#define	STRINGS_H
 
-// Коды шейдеров
+
+// Вершинный шейдер
 static const char* pVS = "                                                          \n\
 #version 330                                                                        \n\
                                                                                     \n\
 layout (location = 0) in vec3 Position;                                             \n\
+layout (location = 1) in vec2 TexCoord;                                             \n\
                                                                                     \n\
-uniform mat4 gWorld;                                                                \n\
+uniform mat4 gWVP;                                                                  \n\
+                                                                                    \n\
+out vec2 TexCoord0;                                                                 \n\
                                                                                     \n\
 void main()                                                                         \n\
 {                                                                                   \n\
-    gl_Position = gWorld * vec4(Position, 1.0);                                     \n\
+    gl_Position = gWVP * vec4(Position, 1.0);                                       \n\
+    TexCoord0 = TexCoord;                                                           \n\
 }";
 
+// Фрагментный шейдер
 static const char* pFS = "                                                          \n\
 #version 330                                                                        \n\
                                                                                     \n\
+in vec2 TexCoord0;                                                                  \n\
+                                                                                    \n\
 out vec4 FragColor;                                                                 \n\
+                                                                                    \n\
+uniform sampler2D gSampler;                                                         \n\
                                                                                     \n\
 void main()                                                                         \n\
 {                                                                                   \n\
-    FragColor = vec4(0.0, 1.0, 0.0, 1.0);                                           \n\
+    FragColor = texture2D(gSampler, TexCoord0.xy);                                  \n\
 }";
+
+#endif
