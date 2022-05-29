@@ -150,6 +150,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="GlutBackend.cpp" />
     <ClCompile Include="Lighting.cpp" />
     <ClCompile Include="opengl lb1.cpp" />
     <ClCompile Include="Pipeline.cpp" />
@@ -158,11 +159,13 @@
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Callbacks.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="GlutBackend.h" />
     <ClInclude Include="Lighting.h" />
     <ClInclude Include="Pipeline.h" />
     <ClInclude Include="math_3d.h" />
-    <ClInclude Include="Strings.h" />
+    <ClInclude Include="shader_codes.h" />
     <ClInclude Include="Technique.h" />
     <ClInclude Include="Texture.h" />
   </ItemGroup>

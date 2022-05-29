@@ -1,5 +1,5 @@
 #include "Lighting.h"
-#include "Strings.h"
+#include "shader_codes.h"
 
 LightingTechnique::LightingTechnique() {}
 

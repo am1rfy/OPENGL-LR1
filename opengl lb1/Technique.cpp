@@ -82,7 +82,6 @@ bool Technique::Finalize() {
         return false;
     }
 
-    // Удаляем промежуточные объекты шейдеров, которые были добавлены в программу
     for (ShaderObjList::iterator it = shaderObjList.begin(); it != shaderObjList.end(); it++)
         glDeleteShader(*it);
     
