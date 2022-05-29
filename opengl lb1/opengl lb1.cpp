@@ -78,9 +78,6 @@ static void RenderSceneCB() {
     // Отрисовка вершин куба
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-    // Отрисовка вершин кристалла
-    // glDrawElements(GL_TRIANGLES, 48, GL_UNSIGNED_INT, 0);
-
     // Отключение атрибутов вершины
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
@@ -126,22 +123,6 @@ static void InitializeGlutCallbacks() {
 
 // Метод помещения вектора в буфер
 static void CreateVertexBuffer() {   
-    // Кристалл
-    //Vector3f Vertices[10] = {
-    //    Vector3f(0.125f, 0.0f, -0.0625f),
-    //    Vector3f(-0.125f, 0.0f, -0.0625f),
-    //    Vector3f(-0.125f, 0.0f, 0.0625f),
-    //    Vector3f(0.125f, 0.0f, 0.0625f),
-
-    //    Vector3f(0.0625f, 0.0f, -0.125f),
-    //    Vector3f(-0.0625f, 0.0f, -0.125f),
-    //    Vector3f(-0.0625f, 0.0f, 0.125f),
-    //    Vector3f(0.0625f, 0.0f, 0.125f),
-
-    //    Vector3f(0.0f, 0.5f, 0.0f),
-    //    Vector3f(0.0f, -0.5f, 0.0f),
-    //};
-
     // Куб
     Vertex Vertices[24] = {
         Vertex(Vector3f(-0.25f, 0.25f, 0.25f), Vector2f(0.0f, 0.0f)),
@@ -181,27 +162,6 @@ static void CreateVertexBuffer() {
 }
 
 static void CreateIndexBuffer() {
-    // Кристалл
-    //unsigned int Indices[] = {
-    //    5, 4, 8,
-    //    4, 0, 8,
-    //    0, 3, 8,
-    //    3, 7, 8,
-    //    7, 6, 8,
-    //    6, 2, 8,
-    //    2, 1, 8,
-    //    1, 5, 8,
-
-    //    5, 4, 9,
-    //    4, 0, 9,
-    //    0, 3, 9,
-    //    3, 7, 9,
-    //    7, 6, 9,
-    //    6, 2, 9,
-    //    2, 1, 9,
-    //    1, 5, 9,
-    //};
-
     // Куб
     unsigned int Indices[] = {
         1, 3, 0,
@@ -226,88 +186,6 @@ static void CreateIndexBuffer() {
     glGenBuffers(1, &IndexBuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
-}
-
-static void AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType) {
-    // Создание шейдера
-    GLuint ShaderObj = glCreateShader(ShaderType);
-
-    // Обработка ошибок
-    if (ShaderObj == 0) {
-        fprintf(stderr, "Error creating shader type %d\n", ShaderType);
-        exit(0);
-    }
-
-    // Сохранение кода шейдера
-    const GLchar* p[1];
-    p[0] = pShaderText;
-
-    // Массив длин кодов шейдеров
-    GLint Lengths[1];
-    Lengths[0] = strlen(pShaderText);
-
-    // Задание исходников шейдера
-    glShaderSource(ShaderObj, 1, p, Lengths);
-    // Компилируем шейдер
-    glCompileShader(ShaderObj);
-
-    // Обработка ошибок (шейдер не скомпилился)
-    GLint success;
-    glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        GLchar InfoLog[1024];
-        glGetShaderInfoLog(ShaderObj, 1024, NULL, InfoLog);
-        fprintf(stderr, "Error compiling shader type %d: '%s'\n", ShaderType, InfoLog);
-        exit(1);
-    }
-
-    // Скомпилированный обьект шейдера 
-    glAttachShader(ShaderProgram, ShaderObj);
-}
-
-static void CompileShaders() {
-    // Создание программы шейдера
-    GLuint ShaderProgram = glCreateProgram();
-
-    // Обработка ошибки создания программы шейдера
-    if (ShaderProgram == 0) {
-        fprintf(stderr, "Error creating shader program\n");
-        exit(1);
-    }
-
-    // Добавляем шейдер для вершин
-    AddShader(ShaderProgram, pVS, GL_VERTEX_SHADER);
-    AddShader(ShaderProgram, pFS, GL_FRAGMENT_SHADER);
-
-    GLint Success = 0;
-    GLchar ErrorLog[1024] = { 0 };
-
-    // Проверка отклика программы
-    glLinkProgram(ShaderProgram);
-    glGetProgramiv(ShaderProgram, GL_LINK_STATUS, &Success);
-    if (Success == 0) {
-        glGetProgramInfoLog(ShaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
-        fprintf(stderr, "Error linking shader program: '%s'\n", ErrorLog);
-        exit(1);
-    }
-
-    // Валидация программы
-    glValidateProgram(ShaderProgram);
-    glGetProgramiv(ShaderProgram, GL_VALIDATE_STATUS, &Success);
-    if (!Success) {
-        glGetProgramInfoLog(ShaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
-        fprintf(stderr, "Invalid shader program: '%s'\n", ErrorLog);
-        exit(1);
-    }
-
-    // glew теперь использует эту программу шейдера
-    glUseProgram(ShaderProgram);
-
-    // сохранение в переменную gWorldLocation
-    gWorldLocation = glGetUniformLocation(ShaderProgram, "gWVP");
-    assert(gWorldLocation != 0xFFFFFFFF);
-    Sampler = glGetUniformLocation(ShaderProgram, "gSampler");
-    assert(Sampler != 0xFFFFFFFF);
 }
 
 int main(int argc, char** argv) {
@@ -352,9 +230,6 @@ int main(int argc, char** argv) {
     // Создание буфера вершин
     CreateVertexBuffer();
     CreateIndexBuffer();
-
-    // Создание шейдера
-    CompileShaders();
 
     // Установка индексов текстур, для последующего использования внутри шейдеров
     glUniform1i(Sampler, 0);
