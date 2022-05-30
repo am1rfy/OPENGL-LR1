@@ -1,113 +1,97 @@
-#ifndef MATH_3D_H
-#define	MATH_3D_H
-
+#ifndef MATH3D_H
+#define MATH3D_H
 #include <stdio.h>
 #include <math.h>
+#define M_PI       3.14159265358979323846
 
-#define M_PI 3.14159265358979323846
 #define ToRadian(x) ((x) * M_PI / 180.0f)
 #define ToDegree(x) ((x) * 180.0f / M_PI)
 
-
-struct Vector2i {
-    int x, y;
+struct my_Vector2i
+{
+    float x;
+    float y;
 };
 
-struct Vector2f
+struct my_Vector3f
 {
-    float x, y;
+    float x;
+    float y;
+    float z;
 
-    Vector2f() {}
+    my_Vector3f()
+    {
+        x = 0;
+        y = 0;
+        z = 0;
+    }
 
-    Vector2f(float _x, float _y) {
+    my_Vector3f(float _x, float _y, float _z)
+    {
         x = _x;
         y = _y;
+        z = _z;
+    }
+
+    my_Vector3f Cross(const my_Vector3f& v) const;
+
+    my_Vector3f& Normalize();
+
+    void Rotate(float Angle, const my_Vector3f& Axis);
+
+    void Print() const
+    {
+        printf("(%.02f, %.02f, %.02f", x, y, z);
     }
 };
 
-struct Vector3f {
-    float x, y, z;
-
-    Vector3f() {}
-
-    Vector3f(float x, float y, float z) {
-        (*this).x = x;
-        (*this).y = y;
-        (*this).z = z;
-    }
-
-    Vector3f& operator+=(const Vector3f& r) {
-        x += r.x;
-        y += r.y;
-        z += r.z;
-        return *this;
-    }
-
-    Vector3f& operator-=(const Vector3f& r) {
-        x -= r.x;
-        y -= r.y;
-        z -= r.z;
-        return *this;
-    }
-
-    Vector3f& operator*=(float f) {
-        x *= f;
-        y *= f;
-        z *= f;
-        return *this;
-    }
-
-    Vector3f Cross(const Vector3f& v) const;
-
-    Vector3f& Normalize();
-
-    void Rotate(float Angle, const Vector3f& Axis);
-
-    void Print() const { printf("(%.02f, %.02f, %.02f", x, y, z); }
-};
-
-inline Vector3f operator+(const Vector3f& l, const Vector3f& r) {
-    Vector3f Ret(
-        l.x + r.x,
+inline my_Vector3f operator+(const my_Vector3f& l, const my_Vector3f& r)
+{
+    my_Vector3f Ret(l.x + r.x,
         l.y + r.y,
-        l.z + r.z
-    );
+        l.z + r.z);
+
     return Ret;
 }
 
-inline Vector3f operator-(const Vector3f& l, const Vector3f& r) {
-    Vector3f Ret(
-        l.x - r.x,
+inline my_Vector3f operator-(const my_Vector3f& l, const my_Vector3f& r)
+{
+    my_Vector3f Ret(l.x - r.x,
         l.y - r.y,
-        l.z - r.z
-    );
+        l.z - r.z);
+
     return Ret;
 }
 
-inline Vector3f operator*(const Vector3f& l, float f) {
-    Vector3f Ret(
-        l.x * f,
+inline my_Vector3f operator*(const my_Vector3f& l, float f)
+{
+    my_Vector3f Ret(l.x * f,
         l.y * f,
-        l.z * f
-    );
+        l.z * f);
+
     return Ret;
 }
 
-class Matrix4f {
-
+class Matrix4f
+{
 public:
     float m[4][4];
 
-    Matrix4f() {}
+    Matrix4f()
+    {
+    }
 
-    inline void InitIdentity() {
+
+    inline void InitIdentity()
+    {
         m[0][0] = 1.0f; m[0][1] = 0.0f; m[0][2] = 0.0f; m[0][3] = 0.0f;
         m[1][0] = 0.0f; m[1][1] = 1.0f; m[1][2] = 0.0f; m[1][3] = 0.0f;
         m[2][0] = 0.0f; m[2][1] = 0.0f; m[2][2] = 1.0f; m[2][3] = 0.0f;
         m[3][0] = 0.0f; m[3][1] = 0.0f; m[3][2] = 0.0f; m[3][3] = 1.0f;
     }
 
-    inline Matrix4f operator*(const Matrix4f& Right) const {
+    inline Matrix4f operator*(const Matrix4f& Right) const
+    {
         Matrix4f Ret;
 
         for (unsigned int i = 0; i < 4; i++) {
@@ -118,21 +102,22 @@ public:
                     m[i][3] * Right.m[3][j];
             }
         }
+
         return Ret;
     }
 
     void InitScaleTransform(float ScaleX, float ScaleY, float ScaleZ);
     void InitRotateTransform(float RotateX, float RotateY, float RotateZ);
     void InitTranslationTransform(float x, float y, float z);
-    void InitCameraTransform(const Vector3f& Target, const Vector3f& Up);
+    void InitCameraTransform(const my_Vector3f& Target, const my_Vector3f& Up);
     void InitPersProjTransform(float FOV, float Width, float Height, float zNear, float zFar);
 };
 
-
-struct Quaternion {
+struct Quaternion
+{
     float x, y, z, w;
 
-    Quaternion(float x, float y, float z, float w);
+    Quaternion(float _x, float _y, float _z, float _w);
 
     void Normalize();
 
@@ -141,18 +126,6 @@ struct Quaternion {
 
 Quaternion operator*(const Quaternion& l, const Quaternion& r);
 
-Quaternion operator*(const Quaternion& q, const Vector3f& v);
-
-struct Vertex {
-    Vector3f pos;
-    Vector2f tex;
-
-    Vertex() {}
-
-    Vertex(Vector3f pos, Vector2f tex) {
-        (*this).pos = pos;
-        (*this).tex = tex;
-    }
-};
+Quaternion operator*(const Quaternion& q, const my_Vector3f& v);
 
 #endif

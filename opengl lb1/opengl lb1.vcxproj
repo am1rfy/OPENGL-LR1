@@ -165,7 +165,7 @@
     <ClInclude Include="Lighting.h" />
     <ClInclude Include="Pipeline.h" />
     <ClInclude Include="math_3d.h" />
-    <ClInclude Include="shader_codes.h" />
+    <ClInclude Include="Utils.h" />
     <ClInclude Include="Technique.h" />
     <ClInclude Include="Texture.h" />
   </ItemGroup>

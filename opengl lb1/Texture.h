@@ -8,7 +8,8 @@
 
 using namespace Magick;
 
-class Texture {
+class Texture
+{
 public:
     Texture(GLenum TextureTarget, const std::string& FileName);
 
@@ -17,12 +18,12 @@ public:
     void Bind(GLenum TextureUnit);
 
 private:
-    std::string fileName;
-    GLenum textureTarget;
-    GLuint textureObj;
-    Image* image;
-    Blob blob;
+    std::string m_fileName;
+    GLenum m_textureTarget;
+    GLuint m_textureObj;
+    Image* m_pImage;
+    Blob m_blob;
 };
 
 
-#endif
+#endif	/* TEXTURE_H */

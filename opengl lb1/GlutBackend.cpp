@@ -1,29 +1,29 @@
-#include <io.h>
 #include <stdio.h>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
 #include "GlutBackend.h"
-static ICallbacks* callbacks = NULL;
+
+static ICallbacks* s_pCallbacks = NULL;
 
 static void SpecialKeyboardCB(int Key, int x, int y) {
-    callbacks->SpecialKeyboardCB(Key, x, y);
+    s_pCallbacks->SpecialKeyboardCB(Key, x, y);
 }
 
 static void KeyboardCB(unsigned char Key, int x, int y) {
-    callbacks->KeyboardCB(Key, x, y);
+    s_pCallbacks->KeyboardCB(Key, x, y);
 }
 
 static void PassiveMouseCB(int x, int y) {
-    callbacks->PassiveMouseCB(x, y);
+    s_pCallbacks->PassiveMouseCB(x, y);
 }
 
 static void RenderSceneCB() {
-    callbacks->RenderSceneCB();
+    s_pCallbacks->RenderSceneCB();
 }
 
 static void IdleCB() {
-    callbacks->IdleCB();
+    s_pCallbacks->IdleCB();
 }
 
 static void InitCallbacks() {
@@ -40,16 +40,24 @@ void GLUTBackendInit(int argc, char** argv) {
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
 }
 
-bool GLUTBackendCreateWindow(unsigned int width, unsigned int height, const char* title) {
-    glutInitWindowSize(width, height);
-    glutInitWindowPosition(250, 40);
-    glutCreateWindow(title);
-    
+bool GLUTBackendCreateWindow(unsigned int Width, unsigned int Height, unsigned int bpp, bool isFullScreen, const char* pTitle) {
+    if (isFullScreen) {
+        char ModeString[64] = { 0 };
+        snprintf(ModeString, sizeof(ModeString), "%dx%d@%d", Width, Height, bpp);
+        glutGameModeString(ModeString);
+        glutEnterGameMode();
+    }
+    else {
+        glutInitWindowSize(Width, Height);
+        glutCreateWindow(pTitle);
+    }
+
     GLenum res = glewInit();
     if (res != GLEW_OK) {
         fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
         return false;
     }
+
     return true;
 }
 
@@ -59,12 +67,12 @@ void GLUTBackendRun(ICallbacks* pCallbacks) {
         return;
     }
 
-    glClearColor(0.5f, 0.0f, 1.0f, 0.0f);
-    glFrontFace(GL_CW);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glFrontFace(GL_FRONT);
     glCullFace(GL_BACK);
     glEnable(GL_CULL_FACE);
 
-    callbacks = pCallbacks;
+    s_pCallbacks = pCallbacks;
     InitCallbacks();
     glutMainLoop();
 }

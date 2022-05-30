@@ -4,23 +4,24 @@
 #include "Technique.h"
 
 Technique::Technique() {
-    shaderProg = 0;
+    m_shaderProg = 0;
 }
 
 Technique::~Technique() {
-    for (ShaderObjList::iterator it = shaderObjList.begin(); it != shaderObjList.end(); it++) 
+    for (ShaderObjList::iterator it = m_shaderObjList.begin(); it != m_shaderObjList.end(); it++) {
         glDeleteShader(*it);
-    
-    if (shaderProg != 0) {
-        glDeleteProgram(shaderProg);
-        shaderProg = 0;
+    }
+
+    if (m_shaderProg != 0) {
+        glDeleteProgram(m_shaderProg);
+        m_shaderProg = 0;
     }
 }
 
 bool Technique::Init() {
-    shaderProg = glCreateProgram();
+    m_shaderProg = glCreateProgram();
 
-    if (shaderProg == 0) {
+    if (m_shaderProg == 0) {
         fprintf(stderr, "Error creating shader program\n");
         return false;
     }
@@ -36,7 +37,7 @@ bool Technique::AddShader(GLenum ShaderType, const char* pShaderText) {
         return false;
     }
 
-    shaderObjList.push_back(ShaderObj);
+    m_shaderObjList.push_back(ShaderObj);
 
     const GLchar* p[1];
     p[0] = pShaderText;
@@ -56,7 +57,7 @@ bool Technique::AddShader(GLenum ShaderType, const char* pShaderText) {
         return false;
     }
 
-    glAttachShader(shaderProg, ShaderObj);
+    glAttachShader(m_shaderProg, ShaderObj);
 
     return true;
 }
@@ -65,40 +66,42 @@ bool Technique::Finalize() {
     GLint Success = 0;
     GLchar ErrorLog[1024] = { 0 };
 
-    glLinkProgram(shaderProg);
+    glLinkProgram(m_shaderProg);
 
-    glGetProgramiv(shaderProg, GL_LINK_STATUS, &Success);
+    glGetProgramiv(m_shaderProg, GL_LINK_STATUS, &Success);
     if (Success == 0) {
-        glGetProgramInfoLog(shaderProg, sizeof(ErrorLog), NULL, ErrorLog);
+        glGetProgramInfoLog(m_shaderProg, sizeof(ErrorLog), NULL, ErrorLog);
         fprintf(stderr, "Error linking shader program: '%s'\n", ErrorLog);
         return false;
     }
 
-    glValidateProgram(shaderProg);
-    glGetProgramiv(shaderProg, GL_VALIDATE_STATUS, &Success);
+    glValidateProgram(m_shaderProg);
+    glGetProgramiv(m_shaderProg, GL_VALIDATE_STATUS, &Success);
     if (Success == 0) {
-        glGetProgramInfoLog(shaderProg, sizeof(ErrorLog), NULL, ErrorLog);
+        glGetProgramInfoLog(m_shaderProg, sizeof(ErrorLog), NULL, ErrorLog);
         fprintf(stderr, "Invalid shader program: '%s'\n", ErrorLog);
         return false;
     }
 
-    for (ShaderObjList::iterator it = shaderObjList.begin(); it != shaderObjList.end(); it++)
+    for (ShaderObjList::iterator it = m_shaderObjList.begin(); it != m_shaderObjList.end(); it++) {
         glDeleteShader(*it);
-    
-    shaderObjList.clear();
+    }
+
+    m_shaderObjList.clear();
 
     return true;
 }
 
 void Technique::Enable() {
-    glUseProgram(shaderProg);
+    glUseProgram(m_shaderProg);
 }
 
 GLint Technique::GetUniformLocation(const char* pUniformName) {
-    GLint Location = glGetUniformLocation(shaderProg, pUniformName);
+    GLint Location = glGetUniformLocation(m_shaderProg, pUniformName);
 
-    if (Location == 0xFFFFFFFF)
+    if (Location == 0xFFFFFFFF) {
         fprintf(stderr, "Warning! Unable to get the location of uniform '%s'\n", pUniformName);
-    
+    }
+
     return Location;
 }

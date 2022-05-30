@@ -1,24 +1,28 @@
-#ifndef TECHNIQUE_H
-#define TECHNIQUE_H
+#ifndef TEXHNIQUE_H
+#define TEXHNIQUE_H
 
 #include <GL/glew.h>
 #include <list>
 
-class Technique {
-    GLuint shaderProg;
-    typedef std::list<GLuint> ShaderObjList;
-    ShaderObjList shaderObjList;
+#define INVALID_UNIFORM_LOCATION 0xFFFFFFFF
+
+class Technique
+{
+public:
+    Technique();
+    ~Technique();
+    virtual bool Init();
+    void Enable();
 
 protected:
     bool AddShader(GLenum ShaderType, const char* pShaderText);
     bool Finalize();
     GLint GetUniformLocation(const char* pUniformName);
 
-public:
-    Technique();
-    ~Technique();
-    virtual bool Init();
-    void Enable();
+private:
+    GLuint m_shaderProg;
+    typedef std::list<GLuint> ShaderObjList;
+    ShaderObjList m_shaderObjList;
 };
 
-#endif 
+#endif /* TEXHNIQUE_H */
